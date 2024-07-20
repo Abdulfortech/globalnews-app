@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:global_news/models/article_model.dart';
 import 'package:global_news/models/category_model.dart';
 import 'package:global_news/helper/data.dart';
+import 'package:global_news/helper/news.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -11,10 +13,21 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
     // List<CategoryModel> categories = new List<CategoryModel>();
     List<CategoryModel> categories = getCategories(); // Accessing the method
+    List<ArticleModel> articles = News().news; // Accessing the method
+    bool _loading = true;
   @override
   void initState() {
     super.initState();
     categories = getCategories();
+    getNews();
+  }
+  getNews() async {
+    News newsClass = News();
+    await newsClass.getNews();
+    articles = newsClass.news;
+    setState(() {
+      _loading = false;
+    });
   }
   @override
   Widget build(BuildContext context) {
@@ -29,9 +42,14 @@ class _HomeState extends State<Home> {
         centerTitle:true,
         elevation: 0.0,
       backgroundColor: Colors.white,),
-        body: Container(
+        body: _loading ? Center(
+            child : Container(
+              child: CircularProgressIndicator(),
+            ),
+        ) : Container(
           child: Column(
             children : <Widget>[
+              // categories
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   height:70,
@@ -46,6 +64,18 @@ class _HomeState extends State<Home> {
                                 );
                             }),
                 ),
+              //articles
+              Container(
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    itemBuilder: (context, index){
+                      return BlogTile(
+                        title: articles[index].title,
+                        imageUrl: articles[index].urlToImage,
+                        desc: articles[index].description,
+                      );
+                    }),
+              ),
             ],
             ),
           ),
@@ -100,7 +130,7 @@ class CategoryTile extends StatelessWidget {
 }
 
 class BlogTile extends StatelessWidget {
-  final String imageUrl ='', title ='', desc ='';
+  final String imageUrl, title, desc;
 
   const BlogTile({
     Key? key,
@@ -117,7 +147,7 @@ class BlogTile extends StatelessWidget {
           Image.network(imageUrl),
           Text(title),
           Text(desc),
-        ]
+        ],
       ),
     );
   }
